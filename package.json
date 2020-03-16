@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/bcrwb/tinyapp/issues"
   },
-  "homepage": "https://github.com/bcrwb/tinyapp#readme"
+  "homepage": "https://github.com/bcrwb/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
