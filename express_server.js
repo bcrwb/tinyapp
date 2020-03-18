@@ -39,7 +39,10 @@ app.get("/urls.json", (req, res) => {
   });
   
   app.get("/urls", (req, res) => {
-    let templateVars = { urls: urlDatabase };
+    let templateVars = { 
+      urls: urlDatabase ,
+      username: req.cookies["username"],
+    };
     res.render("urls_index", templateVars);
   });
 
@@ -73,11 +76,22 @@ app.get("/urls.json", (req, res) => {
    res.redirect(`/urls`);         
  });
 
+ app.get("/login", (req,res) => {
+   res.render('urls_login', {username: ''})
+ })
  app.post("/login", (req, res) => {
   res.cookie('username',req.body.username)
  
  res.redirect(`/urls`);         
 });
+
+app.post("/logout", (req, res) => {
+  res.clearCookie('username',req.body.username)
+ 
+ res.redirect(`/urls`);         
+});
+
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
