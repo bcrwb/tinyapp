@@ -55,8 +55,8 @@ app.post('/register', (req, res) => {
 });
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const checkAuth = (email, users) => {
@@ -96,22 +96,28 @@ app.get("/urls.json", (req, res) => {
   });
 
   app.get("/urls/new", (req, res) => {
-    res.render("urls_new");
+    let templateVars = {
+      id: '',
+      email: '', 
+      password: ''
+    };
+    res.render("urls_new",templateVars);
   });
 
   app.post("/urls", (req, res) => {
-     
-    urlDatabase[shortURL] = req.body.longURL; 
+     //to do : create object to attach as value to short url key
+     obj = { longURL: req.body.longURL, userID: req.cookies.user_id }
+    urlDatabase[generateRandomString(6)] = obj; 
     res.redirect(`/urls`);         
   });
 
   app.get("/urls/:shortURL", (req, res) => {
-    let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+    let templateVars = { id: '',shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
     res.render("urls_show", templateVars);
   });
 
   app.get("/u/:shortURL", (req, res) => {
-     const longURL = urlDatabase[shortURL]
+     const longURL = urlDatabase[req.params.shortURL].longURL
     res.redirect(longURL);
   });
   
@@ -121,7 +127,10 @@ app.get("/urls.json", (req, res) => {
   });
 
   app.post("/urls/:id", (req, res) => {
-    urlDatabase[req.params.id] = req.body.newURL
+     //to do : create object to attach as value to short url key
+     obj = { longURL: req.body.newURL, userID: req.cookies.user_id }
+
+    urlDatabase[req.params.id] = obj;
    res.redirect(`/urls`);         
  });
 
