@@ -19,12 +19,37 @@ for (let i = 0; i < length; i++ ) {
 return string;
 }
 
+
+
+
+const users = { 
+//   "userRandomID": {
+//     id: "userRandomID", 
+//     email: "user@example.com", 
+//     password: "purple-monkey-dinosaur"
+//   },
+//  "user2RandomID": {
+//     id: "user2RandomID", 
+//     email: "user2@example.com", 
+//     password: "dishwasher-funk"
+  // }
+}
+
+app.post('/register')
+
+app.post('/register', (req, res) => {
+  let shortURL = generateRandomString(6)
+  users[shortURL] = {id: shortURL,email: req.body.email, password: req.body.password}
+  res.cookie('user_id',shortURL)
+  res.cookie('email',req.body.email)
+ res.redirect('/urls');
+});
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
-let shortURL = generateRandomString(6)
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -39,9 +64,16 @@ app.get("/urls.json", (req, res) => {
   });
   
   app.get("/urls", (req, res) => {
+    if(!req.cookies.user_id || !users[req.cookies.user_id]){
+      res.redirect('/register')
+      return;
+    }
+    let user = users[req.cookies.user_id]
     let templateVars = { 
       urls: urlDatabase ,
-      username: req.cookies["username"],
+      id: user.id,
+      email: user.email, 
+      password: user.password
     };
     res.render("urls_index", templateVars);
   });
@@ -77,16 +109,26 @@ app.get("/urls.json", (req, res) => {
  });
 
  app.get("/login", (req,res) => {
-   res.render('urls_login', {username: ''})
+   res.render('urls_login', {user:{}})
  })
+
+ app.get("/register", (req,res) => {
+   let templateVars = {
+    id: '',
+    email: '', 
+    password: ''
+  };
+   
+  res.render('urls_register', templateVars)
+})
  app.post("/login", (req, res) => {
-  res.cookie('username',req.body.username)
+  res.cookie('user_id',users.id)
  
  res.redirect(`/urls`);         
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username',req.body.username)
+  res.clearCookie('user_id',users.id)
  
  res.redirect(`/urls`);         
 });
