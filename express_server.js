@@ -59,6 +59,17 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
+function urlsForUser(id){
+  let obj = {}
+  for(let short in urlDatabase){
+    if(urlDatabase[short].userID === id){
+    obj[short] = urlDatabase[short]
+    }
+    
+  }
+  return obj
+}
+
 const checkAuth = (email, users) => {
   for (let id in users) {
     if (email === users[id].email) {
@@ -85,9 +96,12 @@ app.get("/urls.json", (req, res) => {
       res.redirect('/register')
       return;
     }
+
+    
+    
     let user = users[req.cookies.user_id]
     let templateVars = { 
-      urls: urlDatabase ,
+      urls: urlsForUser(req.cookies.user_id) ,
       id: user.id,
       email: user.email, 
       password: user.password
@@ -113,6 +127,9 @@ app.get("/urls.json", (req, res) => {
 
   app.get("/urls/:shortURL", (req, res) => {
     let templateVars = { id: '',shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
+    if(req.cookies.user_id !== urlDatabase[req.params.shortURL].userID){
+      res.send('You did not create this url');
+    }
     res.render("urls_show", templateVars);
   });
 
