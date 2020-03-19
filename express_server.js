@@ -35,14 +35,23 @@ const users = {
   // }
 }
 
-app.post('/register')
 
 app.post('/register', (req, res) => {
   let shortURL = generateRandomString(6)
   users[shortURL] = {id: shortURL,email: req.body.email, password: req.body.password}
   res.cookie('user_id',shortURL)
   res.cookie('email',req.body.email)
- res.redirect('/urls');
+  
+  if(!users[shortURL].email){
+    res.statusCode = 400
+    res.send('please enter email')
+  }else if(req.cookies.email === users[shortURL].email){
+    res.statusCode = 400
+    res.send('please enter a new email address')
+  }else {
+  res.redirect('/urls');
+  }
+  
 });
 
 const urlDatabase = {
@@ -50,6 +59,14 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const checkAuth = (email, users) => {
+  for (let id in users) {
+    if (email === users[id].email) {
+       return users[id];
+    }
+  }
+  return false
+}
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -109,7 +126,12 @@ app.get("/urls.json", (req, res) => {
  });
 
  app.get("/login", (req,res) => {
-   res.render('urls_login', {user:{}})
+  let templateVars = {
+    id: '',
+    email: '', 
+    password: ''
+  };
+   res.render('urls_login', templateVars)
  })
 
  app.get("/register", (req,res) => {
@@ -122,13 +144,37 @@ app.get("/urls.json", (req, res) => {
   res.render('urls_register', templateVars)
 })
  app.post("/login", (req, res) => {
-  res.cookie('user_id',users.id)
- 
- res.redirect(`/urls`);         
+  console.log(`users: ${JSON.stringify(users)} userObj: ${JSON.stringify(req.body.email), req.body.password}`)
+  if (!checkAuth(req.body.email, users)){
+    console.log(`no email`)
+    res.statusCode = 403
+    res.send('email not found please register')
+  } else {
+    let user = checkAuth(req.body.email, users)
+    if(user.password === req.body.password){
+      console.log(`login worked: ${JSON.stringify(user)}`)
+      res.cookie('user_id', user.id)
+      res.redirect(`/urls`);  
+    } else {
+      console.log(`email password dont match`)
+      res.statusCode = 403
+      res.send('password doesnt match')
+    }
+  }
+  // if(req.body.email !== users.email){
+  //   res.statusCode = 403
+  //   res.send('email not found please register')
+  // } else if(req.body.password !== users.password){
+  //   res.statusCode = 403
+  //   res.send('password doesnt match')
+  // } else {
+  // } 
+        
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id',users.id)
+  res.clearCookie('email',users.email)
  
  res.redirect(`/urls`);         
 });
