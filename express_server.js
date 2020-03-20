@@ -4,6 +4,7 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 let cookieParser = require('cookie-parser')
+const bcrypt = require('bcrypt');
 
 app.use(cookieParser())
 
@@ -35,12 +36,18 @@ const users = {
   // }
 }
 
-
+let hashedPassword ='';
+let shortURL ='';
 app.post('/register', (req, res) => {
-  let shortURL = generateRandomString(6)
+  shortURL = generateRandomString(6)
   users[shortURL] = {id: shortURL,email: req.body.email, password: req.body.password}
   res.cookie('user_id',shortURL)
   res.cookie('email',req.body.email)
+  const password = users[shortURL].password // found in the req.params object
+ hashedPassword = bcrypt.hashSync(password, 10);
+users[shortURL].password = hashedPassword;
+
+
   
   if(!users[shortURL].email){
     res.statusCode = 400
@@ -72,7 +79,9 @@ function urlsForUser(id){
 
 const checkAuth = (email, users) => {
   for (let id in users) {
-    if (email === users[id].email) {
+  // console.log(email,'users email',users.email)
+    if (email === users.email) {
+      console.log(users[id])
        return users[id];
     }
   }
@@ -170,16 +179,18 @@ app.get("/urls.json", (req, res) => {
   res.render('urls_register', templateVars)
 })
  app.post("/login", (req, res) => {
-  console.log(`users: ${JSON.stringify(users)} userObj: ${JSON.stringify(req.body.email), req.body.password}`)
-  if (!checkAuth(req.body.email, users)){
+  //console.log(`users: ${JSON.stringify(users)} userObj: ${JSON.stringify(req.body.email), req.body.password}`)
+  //console.log(req.body.email,users[shortURL].email,shortURL)
+  if (!checkAuth(req.body.email, users[shortURL])){
     console.log(`no email`)
     res.statusCode = 403
     res.send('email not found please register')
   } else {
-    let user = checkAuth(req.body.email, users)
-    if(user.password === req.body.password){
-      console.log(`login worked: ${JSON.stringify(user)}`)
-      res.cookie('user_id', user.id)
+    //let user = checkAuth(req.body.email, users)
+    //console.log(user)
+    if(bcrypt.compareSync(req.body.password,hashedPassword)){
+      console.log(`login worked: ${JSON.stringify(users)}`)
+      res.cookie('user_id', users[shortURL].id)
       res.redirect(`/urls`);  
     } else {
       console.log(`email password dont match`)
@@ -187,14 +198,7 @@ app.get("/urls.json", (req, res) => {
       res.send('password doesnt match')
     }
   }
-  // if(req.body.email !== users.email){
-  //   res.statusCode = 403
-  //   res.send('email not found please register')
-  // } else if(req.body.password !== users.password){
-  //   res.statusCode = 403
-  //   res.send('password doesnt match')
-  // } else {
-  // } 
+
         
 });
 
