@@ -21,7 +21,7 @@ function generateRandomString(length) {
   }
   return string;
 }
-
+    
 
 //DATABASES
 const urlDatabase = {
@@ -65,6 +65,10 @@ let hashedPassword = '';
 let shortURL = '';
 //POST METHOD FOR REGISTER
 app.post('/register', (req, res) => {
+  if(!req.body.password){
+    res.statusCode = 400
+    res.send('please enter password')
+  }
   if (!req.body.email) {
     res.statusCode = 400
     res.send('please enter email')
@@ -125,6 +129,10 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
+  if (!req.session.user_id || !users[req.session.user_id]) {
+    res.redirect('/register')
+    return;
+  }
   let templateVars = {
     id: '',
     email: '',
