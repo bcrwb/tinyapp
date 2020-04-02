@@ -47,7 +47,7 @@ const urlsForUser = (id) => {
 const checkAuth = (email) => {
   for (let id in users) {
     if (email === users[id].email) {
-      console.log(users[id])
+      console.log('user',users[id])
       return users[id];
     }
   }
@@ -61,10 +61,11 @@ const getUserByEmail = function (email, database) {
 
 
 
-let hashedPassword = '';
-let shortURL = '';
+
 //POST METHOD FOR REGISTER
 app.post('/register', (req, res) => {
+  let hashedPassword = '';
+let shortURL = '';
   if(!req.body.password){
     res.statusCode = 400
     res.send('please enter password')
@@ -85,13 +86,14 @@ app.post('/register', (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  if (!checkAuth(req.body.email, users[shortURL].email)) {
+  user = checkAuth(req.body.email);
+  if (!user) {
     console.log(`no email`)
     res.statusCode = 403
     res.send('email not found please register')
   } else {
-    if (bcrypt.compareSync(req.body.password, hashedPassword)) {
-      req.session.user_id = users[shortURL].id
+    if (bcrypt.compareSync(req.body.password, user.password)) {
+      req.session.user_id = user.id
       res.redirect(`/urls`);
     } else {
       console.log(`email password dont match`)
@@ -118,6 +120,8 @@ app.get("/urls", (req, res) => {
     res.redirect('/register')
     return;
   }
+  console.log(urlDatabase)
+  console.log(users)
   let user = users[req.session.user_id]
   let templateVars = {
     urls: urlsForUser(req.session.user_id),
@@ -133,10 +137,12 @@ app.get("/urls/new", (req, res) => {
     res.redirect('/register')
     return;
   }
+  let user = users[req.session.user_id]
   let templateVars = {
-    id: '',
-    email: '',
-    password: ''
+    urls: urlsForUser(req.session.user_id),
+    id: user.id,
+    email: user.email,
+    password: user.password
   };
   res.render("urls_new", templateVars);
 });
